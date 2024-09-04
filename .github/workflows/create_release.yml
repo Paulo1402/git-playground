@@ -66,16 +66,14 @@ jobs:
                   echo "${{ steps.determine_tag.outputs.new_tag }}" > python/VERSION
     
                   echo "VERSION updated to ${{ steps.determine_tag.outputs.new_tag }}"
-
+                  
             - name: Commit and push updated VERSION
               run: |
                 git config --global user.name 'Floui Actions'
                 git config --global user.email 'actions@floui.io'
 
-                git status
-
                 git add . -A
-                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}"
+                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}" || true
 
                 git push origin HEAD
 
