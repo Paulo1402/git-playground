@@ -66,16 +66,23 @@ jobs:
                   echo "${{ steps.determine_tag.outputs.new_tag }}" > python/VERSION
     
                   echo "VERSION updated to ${{ steps.determine_tag.outputs.new_tag }}"
+
+            - name: Commit
+              uses: dsanders11/github-app-commit-action@v1
+              with:
+                message: "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}"
+                fail-on-no-changes: false
+                token: ${{ steps.app-token.outputs.token }}
                   
-            - name: Commit and push updated VERSION
-              run: |
-                git config --global user.name 'Floui Actions'
-                git config --global user.email 'actions@floui.io'
+            # - name: Commit and push updated VERSION
+            #   run: |
+            #     git config --global user.name 'Floui Actions'
+            #     git config --global user.email 'actions@floui.io'
 
-                git add . -A
-                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}" || true
+            #     git add . -A
+            #     git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}" || true
 
-                git push origin HEAD
+            #     git push origin HEAD
 
             - name: Get the latest commit after the push
               id: get_commit_sha
