@@ -1,0 +1,77 @@
+name: Create release for Floui Workspace
+
+on:
+    pull_request:
+        types: [closed]
+        branches:
+            - "main"
+
+jobs:
+    create-release:
+        if: github.event.pull_request.merged == true
+        runs-on: ubuntu-latest
+
+        permissions:
+          contents: write
+          pull-requests: write
+          deployments: write
+
+        env:
+            GH_TOKEN: ${{ github.token }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install GitHub CLI
+              run: sudo apt-get install gh -y
+
+            - name: Determine New Tag
+              id: determine_tag
+              run: |
+                  HEADS_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+                  if [[ $HEADS_BRANCH == hotfix/* ]]; then
+                    # Get latest release tag and bump the patch version
+                    LATEST_TAG=$(gh release view --json tagName -q '.tagName')
+                    IFS='.' read -r major minor patch <<<"${LATEST_TAG}"
+
+                    patch=$((patch + 1))
+                    NEW_TAG="$major.$minor.$patch"
+                  elif [[ $HEADS_BRANCH == release/* ]]; then
+                    # Extract tag from branch name after "release/" prefix
+                    NEW_TAG="${HEADS_BRANCH#release/}"
+                  else
+                    echo "Branch does not match 'hotfix/*' or 'release/*'. Exiting..."
+                    exit 1
+                  fi
+
+                  echo "New tag is $NEW_TAG"
+                  echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+            - name: Update VERSION
+              run: |
+                  echo "${{ steps.determine_tag.outputs.new_tag }}" > engine/VERSION
+                  echo "${{ steps.determine_tag.outputs.new_tag }}" > frontend-ui/VERSION
+                  echo "${{ steps.determine_tag.outputs.new_tag }}" > backend-api/VERSION
+                  echo "${{ steps.determine_tag.outputs.new_tag }}" > python/VERSION
+    
+                  echo "VERSION updated to ${{ steps.determine_tag.outputs.new_tag }}"
+
+            - name: Commit and push updated VERSION
+              run: |
+                git config --global user.name 'Floui Actions'
+                git config --global user.email 'actions@floui.io'
+
+                git add .
+                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}"
+
+                git push origin HEAD
+
+            - name: Get the latest commit after the push
+              id: get_commit_sha
+              run: echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+            - name: Create GitHub Release
+              run: |
+                  gh release create ${{ steps.determine_tag.outputs.new_tag }} --target ${{ steps.get_commit_sha.outputs.commit_sha }} --title "${{ steps.determine_tag.outputs.new_tag }}" --notes "Automated release of version ${{ steps.determine_tag.outputs.new_tag }}"

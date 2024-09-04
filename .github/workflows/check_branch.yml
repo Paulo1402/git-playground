@@ -1,0 +1,25 @@
+name: Check branch name
+
+on:
+    pull_request:
+        branches:
+            - "main"
+
+jobs:
+    check_branch:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Check branch name
+              run: |
+                  BRANCH_NAME=$(echo '${{ github.event.pull_request.head.ref }}')
+
+                  if [[ $BRANCH_NAME == release/* || $BRANCH_NAME == hotfix/* ]]; then
+                      echo "Branch name is valid"
+                  else
+                      echo "Branch name is invalid"
+                      exit 1
+                  fi
