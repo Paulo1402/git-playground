@@ -67,6 +67,8 @@ jobs:
     
                   echo "VERSION updated to ${{ steps.determine_tag.outputs.new_tag }}"
 
+                  git add . -A
+
             - name: Commit
               uses: dsanders11/github-app-commit-action@v1
               with:
