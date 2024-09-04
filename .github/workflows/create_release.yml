@@ -73,7 +73,7 @@ jobs:
                 git config --global user.email 'actions@floui.io'
 
                 git add . -A
-                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}"
+                git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}" || true
 
                 git push origin HEAD
 
