@@ -31,7 +31,6 @@ jobs:
               uses: actions/checkout@v4
               with:
                 token: ${{ steps.app_token.outputs.token }}
-                persist-credentials: false
 
             - name: Install GitHub CLI
               run: sudo apt-get install gh -y
