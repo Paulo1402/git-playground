@@ -22,7 +22,7 @@ jobs:
         steps:
             - name: Create Github App Token
               uses: actions/create-github-app-token@v1
-              id: app-token
+              id: app_token
               with:
                 app-id: ${{ secrets.APP_ID }}
                 private-key: ${{ secrets.APP_SECRET }}
@@ -30,10 +30,20 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                token: ${{ steps.app-token.outputs.token }}
+                token: ${{ steps.app_token.outputs.token }}
+                persist-credentials: false
 
             - name: Install GitHub CLI
               run: sudo apt-get install gh -y
+
+            - name: Get GitHub App User ID
+              id: get_user_id
+              run: echo "user-id=$(gh api "/users/${{ steps.app_token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+              
+            - name: Configure git
+              run: |
+                git config --global user.name "${{ steps.app_token.outputs.app-slug }}[bot]"
+                git config --global user.email "${{ steps.get_user_id.outputs.user-id }}+${{ steps.app_token.outputs.app-slug }}[bot]@users.noreply.github.com>"
 
             - name: Determine New Tag
               id: determine_tag
@@ -67,15 +77,10 @@ jobs:
     
                   echo "VERSION updated to ${{ steps.determine_tag.outputs.new_tag }}"
 
-
             - name: Commit and push updated VERSION
               run: |
-                git config --global user.name "${{ vars.GH_APP }}[bot]"
-                git config --global user.email "${{ vars.GH_ID }}+${{ vars.GH_APP }}[bot]@users.noreply.github.com"
-
                 git add . -A
                 git commit -m "Update release notes for ${{ steps.determine_tag.outputs.new_tag }}" || true
-
                 git push origin HEAD
 
             - name: Get the latest commit after the push
