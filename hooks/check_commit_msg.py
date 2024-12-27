@@ -19,10 +19,12 @@ def main():
 
     if branch_name.startswith("feature/") or branch_name.startswith("bugfix/"):
         task_id = branch_name.split("/")[1]
-        commit_msg += f"\nRelated to {task_id}"
 
-        with open(commit_msg_filepath, "w") as file:
-            file.write(commit_msg)
+        if task_id not in commit_msg:
+            commit_msg += f"\nRelated to {task_id}"
+
+            with open(commit_msg_filepath, "w") as file:
+                file.write(commit_msg)
 
     return 0
 
