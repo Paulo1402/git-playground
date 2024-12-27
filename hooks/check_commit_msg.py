@@ -17,9 +17,6 @@ def main():
 
     branch_name = get_current_branch_name()
 
-    print(f"Commit message: {commit_msg}")
-    print(f"Current branch: {branch_name}")
-
     if branch_name.startswith("feature/") or branch_name.startswith("bugfix/"):
         task_id = branch_name.split("/")[1]
         commit_msg += f"\nRelated to {task_id}"
